@@ -16,14 +16,12 @@ def sigmoid(x):
         print("Error in sigmoid: " + err)
 
 
-def get_state(data, t, n_days, num_shares, capital):
+def get_state(data, t, n_days, maxabuy):
     """Returns an n-day state representation ending at time t"""
     d = t - n_days + 1
     block = data[d: t + 1] if d >= 0 else -d * [data[0]] + data[0: t + 1]  # pad with t0
     res = []
     for i in range(n_days - 1):
-        res.append(sigmoid(block[i + 1] - block[i]))
-    res.append(num_shares)
-    res.append(capital)
-    # print(np.asarray(res).shape
+        res.append((sigmoid(block[i + 1] - block[i])/100))
+    res.append(maxabuy/10)
     return np.array([res])

@@ -33,21 +33,19 @@ def main(eval_stock, window_size, model_name, debug):
     Args: [python eval.py --help]
     """    
     data = get_stock_data(eval_stock)
-    initial_offset = data[-1] - data[0]
-
     # Single Model Evaluation
     if model_name is not None:
-        agent = Agent(window_size + 2, pretrained=True, model_name=model_name)
+        agent = Agent(window_size + 1, pretrained=True, model_name=model_name)
         profit, _ = evaluate_model(agent, data, window_size, debug)
-        show_eval_result(model_name, profit, initial_offset)
+        show_eval_result(model_name, profit)
         
     # Multiple Model Evaluation
     else:
         for model in os.listdir("models"):
             if os.path.isfile(os.path.join("models", model)):
-                agent = Agent(window_size + 2, pretrained=True, model_name=model)
+                agent = Agent(window_size + 1, pretrained=True, model_name=model)
                 profit = evaluate_model(agent, data, window_size, debug)
-                show_eval_result(model, profit, initial_offset)
+                show_eval_result(model, profit)
                 del agent
 
 

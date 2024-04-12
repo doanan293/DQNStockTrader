@@ -8,7 +8,7 @@ import keras.backend as K
 
 from keras.models import Sequential
 from keras.models import load_model, clone_model
-from keras.layers import Dense, Conv1D, Flatten, Flatten, Dropout, BatchNormalization
+from keras.layers import Dense, Conv1D, Flatten, Flatten, Dropout, BatchNormalization, MaxPooling1D
 from keras.optimizers import Adam
 
 
@@ -32,7 +32,7 @@ class Agent:
 
         # agent config
         self.state_size = state_size    	# normalized previous days
-        self.action_size = 12           		# [sit, buy, sell]
+        self.action_size = 5
         self.model_name = model_name
         self.inventory = []
         self.memory = deque(maxlen=10000)
@@ -67,11 +67,13 @@ class Agent:
         """Creates the model
         """
         model = Sequential()
-        model.add(Conv1D(filters=64, kernel_size=2, activation="relu", input_shape=(self.state_size, 1)))
-        model.add(Conv1D(filters=64, kernel_size=2, activation="relu"))
-        model.add(Conv1D(filters=64, kernel_size=2, activation="relu"))
+        model.add(Conv1D(filters=64, kernel_size=6, activation="relu", input_shape=(self.state_size, 1)))
+        model.add(Dropout(0.5))
+        model.add(Conv1D(filters=32, kernel_size=3, activation="relu"))
+        model.add(Conv1D(filters=16, kernel_size=2, activation="relu"))
+        model.add(MaxPooling1D(pool_size=2))
         model.add(Flatten())
-        model.add(Dense(units=128, activation="relu"))
+        model.add(Dense(units=32, activation="relu"))
         model.add(Dense(units=self.action_size))
 
         model.compile(loss=self.loss, optimizer=self.optimizer)
@@ -91,9 +93,9 @@ class Agent:
 
         if self.first_iter:
             self.first_iter = False
-            return 1  # make a definite buy on the first iter
+            return 3  # make a definite buy on the first iter
 
-        action_probs = self.model.predict(np.asarray(state).reshape(-1 ,12 ,1))
+        action_probs = self.model.predict(np.asarray(state).reshape(-1 ,11 ,1))
         return np.argmax(action_probs[0])
 
     def train_experience_replay(self, batch_size):
@@ -109,10 +111,10 @@ class Agent:
                     target = reward
                 else:
                     # approximate deep q-learning equation
-                    target = reward + self.gamma * np.amax(self.model.predict(np.asarray(next_state).reshape(-1, 12, 1))[0])
-
+                    target = reward + self.gamma * np.amax(self.model.predict(np.asarray(next_state).reshape(-1, 11, 1))[0])
                 # estimate q-values based on current state
-                q_values = self.model.predict(np.asarray(state).reshape(-1 ,12 ,1))
+                q_values = self.model.predict(np.asarray(state).reshape(-1 ,11 ,1))
+
                 # update the target for current action based on discounted reward
                 q_values[0][action] = target
 
@@ -132,12 +134,13 @@ class Agent:
                     target = reward
                 else:
                     # approximate deep q-learning equation with fixed targets
+
                     target = reward + \
                              self.gamma * \
-                             np.amax(self.target_model.predict(np.asarray(next_state).reshape(-1, 12, 1))[0])
+                             np.amax(self.target_model.predict(np.asarray(next_state).reshape(-1, 11, 1))[0])
 
                 # estimate q-values based on current state
-                q_values = self.model.predict(np.asarray(state).reshape(-1 ,12 ,1))
+                q_values = self.model.predict(np.asarray(state).reshape(-1 ,11 ,1))
                 # update the target for current action based on discounted reward
                 q_values[0][action] = target
 
@@ -157,10 +160,9 @@ class Agent:
                 else:
                     # approximate double deep q-learning equation
                     target = reward + self.gamma * \
-                             self.target_model.predict(np.asarray(next_state).reshape(-1, 12, 1))[0][np.argmax(self.model.predict(np.asarray(next_state).reshape(-1, 12, 1))[0])]
-
+                             self.target_model.predict(np.asarray(next_state).reshape(-1, 11, 1))[0][np.argmax(self.model.predict(np.asarray(next_state).reshape(-1, 11, 1))[0])]
                 # estimate q-values based on current state
-                q_values = self.model.predict(np.asarray(state).reshape(-1 ,12 ,1))
+                q_values = self.model.predict(np.asarray(state).reshape(-1 ,11 ,1))
                 # update the target for current action based on discounted reward
                 q_values[0][action] = target
 
@@ -173,7 +175,7 @@ class Agent:
         # update q-function parameters based on huber loss gradient
         # print(np.asarray(X_train).shape)
         loss = self.model.fit(
-            np.array(X_train).reshape(-1, 12, 1),
+            np.array(X_train).reshape(-1, 11, 1),
             np.array(y_train),
             epochs=1, verbose=0
         ).history["loss"][0]
