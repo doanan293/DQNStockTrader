@@ -1,0 +1,29 @@
+# Experiment settings for the report in results/. Dates are inclusive split boundaries.
+data_dir: data/raw
+checkpoint_dir: checkpoints
+output_dir: results
+tickers: [ACB, ACV, BID, CTG, FPT, GAS, HPG, VCB, VHM, VIC]
+seeds: [0, 1, 2]
+episodes: 30
+train_end: 2021-12-31
+val_end: 2022-12-31
+test_end: 2024-03-15
+variants_on:
+  FPT: [dqn, fixed_target, double]
+  "*": [double]
+env:
+  window_size: 10
+  initial_cash: 100000000
+  lot_sizes: [300, 600, 900]
+  fee_rate: 0.0015
+  sell_tax_rate: 0.001
+  reward_mode: mark_to_market
+agent:
+  gamma: 0.95
+  lr: 0.001
+  batch_size: 32
+  buffer_size: 10000
+  epsilon_start: 1.0
+  epsilon_min: 0.01
+  epsilon_decay: 0.995
+  target_sync_steps: 1000
