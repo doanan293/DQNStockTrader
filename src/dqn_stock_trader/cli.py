@@ -9,6 +9,7 @@ from dqn_stock_trader.agent import Variant
 from dqn_stock_trader.config import load_config
 from dqn_stock_trader.evaluate import evaluate as evaluate_agent
 from dqn_stock_trader.metrics import max_drawdown, sharpe_ratio, total_return
+from dqn_stock_trader.report import build_report
 from dqn_stock_trader.train import train as train_agent
 
 app = typer.Typer(help="Deep Q-learning stock trading experiments.", no_args_is_help=True)
@@ -40,3 +41,13 @@ def evaluate(
         f"return {total_return(result.equity):.2%}  sharpe {sharpe_ratio(result.equity):.2f}  "
         f"max drawdown {max_drawdown(result.equity):.2%}  trades {result.n_trades}"
     )
+
+
+@app.command()
+def report(
+    config: ConfigOption = Path("configs/default.yaml"),
+    workers: Annotated[int | None, typer.Option(help="parallel training processes")] = None,
+) -> None:
+    """Train missing checkpoints, evaluate everything on the test period, write results/."""
+    table = build_report(load_config(config), workers)
+    print(table.to_string(index=False))

@@ -67,3 +67,4 @@ def test_cli_help() -> None:
     assert result.exit_code == 0
     assert "train" in result.output
     assert "evaluate" in result.output
+    assert "report" in result.output
