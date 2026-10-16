@@ -1,7 +1,6 @@
 from datetime import date
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import pytest
 
@@ -21,7 +20,7 @@ def test_parses_investing_number_formats(fixture_csv: Path) -> None:
     assert df.loc[pd.Timestamp("2014-01-02"), "open"] == 3910.0
     assert df.loc[pd.Timestamp("2014-01-02"), "volume"] == pytest.approx(540_070.0)
     assert df.loc[pd.Timestamp("2014-01-06"), "volume"] == 1_200_000.0
-    assert np.isnan(df.loc[pd.Timestamp("2014-01-07"), "volume"])
+    assert pd.isna(df.loc[pd.Timestamp("2014-01-07"), "volume"])
     assert df.index.is_monotonic_increasing
     assert list(df.columns) == ["close", "open", "high", "low", "volume"]
 
